@@ -23,12 +23,13 @@ fi
 
 IDENTITY="$("$ROOT/ensure-signing-identity.sh" | tail -n 1)"
 echo "Signing with: $IDENTITY"
-codesign --force --deep --options runtime --sign "$IDENTITY" --timestamp=none "$STAGE"
+# No hardened runtime: self-signed local builds need plain signing for Accessibility to stick.
+codesign --force --deep --sign "$IDENTITY" --timestamp=none "$STAGE"
 
 echo "Installing to $INSTALL_APP"
 rm -rf "$INSTALL_APP"
 cp -R "$STAGE" "$INSTALL_APP"
-codesign --force --deep --options runtime --sign "$IDENTITY" --timestamp=none "$INSTALL_APP"
+codesign --force --deep --sign "$IDENTITY" --timestamp=none "$INSTALL_APP"
 
 echo ""
 echo "Installed: $INSTALL_APP"

@@ -65,11 +65,12 @@ security set-key-partition-list \
   -t private \
   "$KEYCHAIN" >/dev/null 2>&1 || true
 
-# Convert to DER and trust for code signing (may prompt for password).
+# Convert to DER and trust for code signing in the user domain (admin -d often fails silently).
 openssl x509 -in "$TMP/cert.pem" -outform DER -out "$TMP/cert.cer"
-security add-trusted-cert -d -r trustRoot -p codeSign "$TMP/cert.cer" 2>/dev/null || \
-  security add-trusted-cert -d -r trustRoot -p codeSign -k "$KEYCHAIN" "$TMP/cert.cer" 2>/dev/null || \
-  echo "NOTE: If asked, trust '$CERT_NAME' for Code Signing in Keychain Access." >&2
+if ! security add-trusted-cert -r trustRoot -p codeSign "$TMP/cert.cer" 2>/dev/null; then
+  echo "NOTE: Trust '$CERT_NAME' for Code Signing in Keychain Access:" >&2
+  echo "  Get Info → Trust → Code Signing → Always Trust" >&2
+fi
 
 if security find-identity -v -p codesigning 2>/dev/null | grep -qF "$CERT_NAME"; then
   echo "Signing identity ready: $CERT_NAME" >&2
