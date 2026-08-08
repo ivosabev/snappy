@@ -1,0 +1,10 @@
+.build/
+*.app/
+.DS_Store
+*.xcuserstate
+xcuserdata/
+DerivedData/
+*.swp
+*~
+.idea/
+.vscode/
