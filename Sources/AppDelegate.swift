@@ -126,8 +126,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         macOS blocks window resizing until Snappy is allowed.
 
         1. System Settings → Privacy & Security → Accessibility
-        2. Remove any old SnapZones / Snappy entries
-        3. Add /Applications/Snappy.app and turn it ON
+        2. Add /Applications/Snappy.app and turn it ON
 
         Use ./build.sh so the app is signed with a stable identity and installed to /Applications — then rebuilds keep this permission.
         """

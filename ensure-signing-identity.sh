@@ -2,7 +2,7 @@
 # Creates a local code-signing identity once so Accessibility trust survives rebuilds.
 set -euo pipefail
 
-CERT_NAME="SnapZones Code Signing"
+CERT_NAME="Snappy Code Signing"
 KEYCHAIN="${HOME}/Library/Keychains/login.keychain-db"
 
 if security find-identity -v -p codesigning 2>/dev/null | grep -qF "$CERT_NAME"; then
@@ -24,8 +24,8 @@ x509_extensions = v3_req
 prompt = no
 
 [req_distinguished_name]
-CN = SnapZones Code Signing
-O = SnapZones
+CN = Snappy Code Signing
+O = Snappy
 C = US
 
 [v3_req]
@@ -43,7 +43,7 @@ openssl pkcs12 -export \
   -inkey "$TMP/key.pem" \
   -in "$TMP/cert.pem" \
   -name "$CERT_NAME" \
-  -passout pass:snapzones \
+  -passout pass:snappy \
   -legacy \
   -certpbe PBE-SHA1-3DES \
   -keypbe PBE-SHA1-3DES \
@@ -52,7 +52,7 @@ openssl pkcs12 -export \
 
 security import "$TMP/cert.p12" \
   -k "$KEYCHAIN" \
-  -P snapzones \
+  -P snappy \
   -A \
   -T /usr/bin/codesign \
   -T /usr/bin/security \
