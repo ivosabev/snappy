@@ -104,14 +104,14 @@ struct SnapSizes: Codable, Equatable {
     var bottomRight: ZoneSize
 
     static let `default` = SnapSizes(
-        topLeft: ZoneSize(widthFraction: 1.0 / 3.0, heightFraction: 0.5),
+        topLeft: ZoneSize(widthFraction: 0.66, heightFraction: 0.5),
         topCenter: ZoneSize(widthFraction: 1.0, heightFraction: 1.0),
-        topRight: ZoneSize(widthFraction: 1.0 / 3.0, heightFraction: 0.5),
-        leftCenter: ZoneSize(widthFraction: 1.0 / 3.0, heightFraction: 1.0),
-        rightCenter: ZoneSize(widthFraction: 1.0 / 3.0, heightFraction: 1.0),
-        bottomLeft: ZoneSize(widthFraction: 1.0 / 3.0, heightFraction: 0.5),
+        topRight: ZoneSize(widthFraction: 0.34, heightFraction: 0.5),
+        leftCenter: ZoneSize(widthFraction: 0.66, heightFraction: 1.0),
+        rightCenter: ZoneSize(widthFraction: 0.34, heightFraction: 1.0),
+        bottomLeft: ZoneSize(widthFraction: 0.66, heightFraction: 0.5),
         bottomCenter: ZoneSize(widthFraction: 1.0, heightFraction: 1.0),
-        bottomRight: ZoneSize(widthFraction: 1.0 / 3.0, heightFraction: 0.5)
+        bottomRight: ZoneSize(widthFraction: 0.34, heightFraction: 0.5)
     )
 
     func size(for zone: SnapZone) -> ZoneSize {

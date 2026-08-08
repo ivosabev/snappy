@@ -4,7 +4,7 @@ import AppKit
 final class Preferences {
     static let shared = Preferences()
 
-    private let sizesKey = "snapSizes.v3"
+    private let sizesKey = "snapSizes.v4"
     private let enabledKey = "snapEnabled"
     private let edgeThicknessKey = "edgeThickness"
 
