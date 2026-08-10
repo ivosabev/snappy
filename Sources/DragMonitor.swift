@@ -8,10 +8,15 @@ final class DragMonitor {
 
     private var isDragging = false
     private var dragStartPoint: CGPoint?
+    private var dragStartFrame: CGRect?
     private var trackedWindow: AXUIElement?
     private var activeZone: SnapZone?
 
+    /// Mouse must move at least this far before we consider a drag.
     private let dragThreshold: CGFloat = 6
+    /// Window origin must move at least this far before snap zones activate.
+    /// Filters out scrollbar drags, text selection, and other in-window gestures.
+    private let windowMoveThreshold: CGFloat = 4
 
     func start() {
         stop()
@@ -64,10 +69,22 @@ final class DragMonitor {
     }
 
     private func beginPotentialDrag() {
-        dragStartPoint = NSEvent.mouseLocation
-        trackedWindow = AccessibilityService.windowAtMouse()
         isDragging = false
         activeZone = nil
+        dragStartFrame = nil
+        trackedWindow = nil
+
+        // Scrollbars and similar controls produce left-drags without moving the window.
+        guard !AccessibilityService.isNonWindowDragControlAtMouse() else {
+            dragStartPoint = nil
+            return
+        }
+
+        dragStartPoint = NSEvent.mouseLocation
+        trackedWindow = AccessibilityService.windowAtMouse()
+        if let trackedWindow {
+            dragStartFrame = AccessibilityService.frame(of: trackedWindow)
+        }
     }
 
     private func updateDrag() {
@@ -77,11 +94,27 @@ final class DragMonitor {
 
         if !isDragging {
             guard distance >= dragThreshold else { return }
-            isDragging = true
+
             if trackedWindow == nil {
                 trackedWindow = AccessibilityService.windowAtMouse()
-                    ?? AccessibilityService.focusedWindowOfFrontmostApp()
             }
+            guard let window = trackedWindow else { return }
+
+            if dragStartFrame == nil {
+                dragStartFrame = AccessibilityService.frame(of: window)
+            }
+            // Only treat this as a window drag once the window itself has moved.
+            guard let startFrame = dragStartFrame,
+                  let currentFrame = AccessibilityService.frame(of: window) else {
+                return
+            }
+            let originDistance = hypot(
+                currentFrame.origin.x - startFrame.origin.x,
+                currentFrame.origin.y - startFrame.origin.y
+            )
+            guard originDistance >= windowMoveThreshold else { return }
+
+            isDragging = true
         }
 
         guard trackedWindow != nil else {
@@ -123,6 +156,7 @@ final class DragMonitor {
     private func resetDragState() {
         isDragging = false
         dragStartPoint = nil
+        dragStartFrame = nil
         trackedWindow = nil
         activeZone = nil
         overlay.hide()

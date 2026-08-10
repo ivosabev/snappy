@@ -21,25 +21,11 @@ enum AccessibilityService {
 
     /// Frontmost window under the cursor that is not our own process.
     static func windowAtMouse() -> AXUIElement? {
-        let location = ScreenGeometry.accessibilityMouseLocation()
-        let system = AXUIElementCreateSystemWide()
-
-        var element: AXUIElement?
-        let error = AXUIElementCopyElementAtPosition(
-            system,
-            Float(location.x),
-            Float(location.y),
-            &element
-        )
-
-        guard error == .success, let element else { return nil }
+        guard let element = elementAtMouse() else { return nil }
 
         var current: AXUIElement? = element
         while let candidate = current {
-            var roleValue: CFTypeRef?
-            if AXUIElementCopyAttributeValue(candidate, kAXRoleAttribute as CFString, &roleValue) == .success,
-               let role = roleValue as? String,
-               role == kAXWindowRole as String {
+            if role(of: candidate) == (kAXWindowRole as String) {
                 if isOwnWindow(candidate) { return nil }
                 return candidate
             }
@@ -52,6 +38,36 @@ enum AccessibilityService {
         }
 
         return focusedWindowOfFrontmostApp()
+    }
+
+    /// True when the press started on a control that commonly produces left-drags
+    /// without moving the window (scrollbars, sliders, etc.).
+    static func isNonWindowDragControlAtMouse() -> Bool {
+        guard let element = elementAtMouse() else { return false }
+
+        let ignoredRoles: Set<String> = [
+            kAXScrollBarRole as String,
+            kAXSliderRole as String,
+            kAXIncrementorRole as String,
+            kAXHandleRole as String,
+            "AXSplitter",
+        ]
+
+        var current: AXUIElement? = element
+        while let candidate = current {
+            if let role = role(of: candidate) {
+                if role == (kAXWindowRole as String) { return false }
+                if ignoredRoles.contains(role) { return true }
+            }
+
+            var parent: CFTypeRef?
+            if AXUIElementCopyAttributeValue(candidate, kAXParentAttribute as CFString, &parent) != .success {
+                break
+            }
+            current = (parent as! AXUIElement)
+        }
+
+        return false
     }
 
     static func focusedWindowOfFrontmostApp() -> AXUIElement? {
@@ -100,6 +116,30 @@ enum AccessibilityService {
         if let positionValue = AXValueCreate(.cgPoint, &position) {
             AXUIElementSetAttributeValue(window, kAXPositionAttribute as CFString, positionValue)
         }
+    }
+
+    private static func elementAtMouse() -> AXUIElement? {
+        let location = ScreenGeometry.accessibilityMouseLocation()
+        let system = AXUIElementCreateSystemWide()
+
+        var element: AXUIElement?
+        let error = AXUIElementCopyElementAtPosition(
+            system,
+            Float(location.x),
+            Float(location.y),
+            &element
+        )
+
+        guard error == .success else { return nil }
+        return element
+    }
+
+    private static func role(of element: AXUIElement) -> String? {
+        var roleValue: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(element, kAXRoleAttribute as CFString, &roleValue) == .success else {
+            return nil
+        }
+        return roleValue as? String
     }
 
     private static func isOwnWindow(_ window: AXUIElement) -> Bool {
