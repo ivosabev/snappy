@@ -18,6 +18,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         dragMonitor = DragMonitor()
         setupStatusItem()
+        enableLaunchAtLoginOnFirstRun()
         ensureAccessibility()
         dragMonitor.start()
 
@@ -94,6 +95,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         enabledItem.isEnabled = trusted
         menu.addItem(enabledItem)
 
+        let loginItem = NSMenuItem(
+            title: LaunchAtLogin.needsApproval ? "Open at Login: Needs Approval" : "Open at Login",
+            action: #selector(toggleLaunchAtLogin),
+            keyEquivalent: ""
+        )
+        loginItem.target = self
+        loginItem.state = LaunchAtLogin.isEnabled ? .on : .off
+        menu.addItem(loginItem)
+
         menu.addItem(.separator())
 
         let prefs = NSMenuItem(title: "Preferences…", action: #selector(openPreferences), keyEquivalent: ",")
@@ -140,8 +150,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    private func enableLaunchAtLoginOnFirstRun() {
+        let key = "launchAtLoginConfigured"
+        guard UserDefaults.standard.object(forKey: key) == nil else { return }
+        UserDefaults.standard.set(true, forKey: key)
+        LaunchAtLogin.setEnabled(true)
+        refreshMenu()
+    }
+
     @objc private func toggleEnabled() {
         Preferences.shared.isEnabled.toggle()
+        refreshMenu()
+    }
+
+    @objc private func toggleLaunchAtLogin() {
+        if LaunchAtLogin.needsApproval {
+            LaunchAtLogin.openLoginItemsSettings()
+            return
+        }
+        if !LaunchAtLogin.setEnabled(!LaunchAtLogin.isEnabled) && LaunchAtLogin.needsApproval {
+            LaunchAtLogin.openLoginItemsSettings()
+        }
         refreshMenu()
     }
 
